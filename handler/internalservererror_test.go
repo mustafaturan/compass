@@ -16,7 +16,7 @@ func TestServeHTTP(t *testing.T) {
 		{
 			handlerFunc: func(rw http.ResponseWriter, req *http.Request) {
 				defer internalServerError.ServeHTTP(rw, req)
-				io.WriteString(rw, "<html><body>Hello World!</body></html>")
+				_, _ = io.WriteString(rw, "<html><body>Hello World!</body></html>")
 			},
 			statusCode: http.StatusOK,
 		},

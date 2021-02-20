@@ -1,4 +1,4 @@
-// Copyright 2019 Mustafa Turan. All rights reserved.
+// Copyright 2021 Mustafa Turan. All rights reserved.
 // Use of this source code is governed by a Apache License 2.0 license that can
 // be found in the LICENSE file.
 
@@ -12,11 +12,11 @@ import (
 	"strings"
 
 	chandler "github.com/mustafaturan/compass/handler"
+	cinterceptor "github.com/mustafaturan/compass/interceptor"
 	cmatcher "github.com/mustafaturan/compass/matcher"
-	cmiddleware "github.com/mustafaturan/compass/middleware"
 )
 
-// Router is an internal router for HTTP routing with middleware support
+// Router is an internal router for HTTP routing with interceptor support
 type Router interface {
 	http.Handler
 
@@ -42,8 +42,8 @@ type Router interface {
 
 // router is an implementation of Router
 type router struct {
-	middlewares []cmiddleware.Middleware
-	matcher     *cmatcher.Matcher
+	interceptors []cinterceptor.Interceptor
+	matcher      *cmatcher.Matcher
 
 	// Schemes allows access to the provided schemes only
 	// The default value catches `http` and `https` schemes
@@ -76,7 +76,7 @@ const (
 // New returns a new Router with default handlers
 func New(options ...Option) (Router, error) {
 	r := &router{
-		middlewares:         make([]cmiddleware.Middleware, 0),
+		interceptors:        make([]cinterceptor.Interceptor, 0),
 		matcher:             cmatcher.New(),
 		schemes:             map[string]struct{}{matchall: {}},
 		hostnames:           map[string]struct{}{matchall: {}},
@@ -140,14 +140,12 @@ func WithHandler(statusCode int, h http.Handler) Option {
 	}
 }
 
-// WithMiddlewares appends a middleware.Middleware to the chain. Middleware
+// WithInterceptors appends a interceptor.Interceptor to the chain. Interceptor
 // can be used to intercept or otherwise modify requests and/or responses, and
 // are executed in the order that they are applied to the Router.
-func WithMiddlewares(middlewares ...cmiddleware.Middleware) Option {
+func WithInterceptors(interceptors ...cinterceptor.Interceptor) Option {
 	return func(r *router) error {
-		for _, m := range middlewares {
-			r.middlewares = append(r.middlewares, m)
-		}
+		r.interceptors = append(r.interceptors, interceptors...)
 		return nil
 	}
 }
@@ -157,7 +155,7 @@ func Params(ctx context.Context) map[string]string {
 	return ctx.Value(CtxParams).(map[string]string)
 }
 
-// ServeHTTP implements http.Handler interface with middlewares
+// ServeHTTP implements http.Handler interface with interceptors
 func (r *router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	defer r.internalservererror.ServeHTTP(rw, req)
 
@@ -174,8 +172,8 @@ func (r *router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	ctx := context.WithValue(req.Context(), CtxParams, params)
 	req = req.WithContext(ctx)
 
-	for i := len(r.middlewares) - 1; i >= 0; i-- {
-		h = r.middlewares[i].Next(h)
+	for i := len(r.interceptors) - 1; i >= 0; i-- {
+		h = r.interceptors[i].Middleware(h)
 	}
 
 	h.ServeHTTP(rw, req)

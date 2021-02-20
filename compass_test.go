@@ -155,18 +155,18 @@ func TestWithHandler(t *testing.T) {
 	}
 }
 
-func TestWithMiddlewares(t *testing.T) {
+func TestWithInterceptors(t *testing.T) {
 	r := &router{}
-	first, second := &fakeMiddleware{"first"}, &fakeMiddleware{"second"}
-	WithMiddlewares(first, second)(r)
-	t.Run("adds middlewares in correct order", func(t *testing.T) {
-		if r.middlewares[0] != first || r.middlewares[1] != second {
-			t.Fatalf("middlewares registered in incorrect order")
+	first, second := &fakeInterceptor{"first"}, &fakeInterceptor{"second"}
+	_ = WithInterceptors(first, second)(r)
+	t.Run("adds interceptors in correct order", func(t *testing.T) {
+		if r.interceptors[0] != first || r.interceptors[1] != second {
+			t.Fatalf("interceptors registered in incorrect order")
 		}
 	})
-	t.Run("has correct number of middlewares", func(t *testing.T) {
-		if len(r.middlewares) != 2 {
-			t.Fatalf("must register exactly 2 middlewares")
+	t.Run("has correct number of interceptors", func(t *testing.T) {
+		if len(r.interceptors) != 2 {
+			t.Fatalf("must register exactly 2 interceptors")
 		}
 	})
 }
@@ -209,7 +209,7 @@ func TestServeHTTP(t *testing.T) {
 			statusCode: 200,
 			params:     make(map[string]string),
 		},
-		{ // hostname, scheme, path registered with middleware
+		{ // hostname, scheme, path registered with interceptor
 			handler:    fakeHandler{"ok"},
 			path:       "/posts",
 			reqURL:     "https://example.com/posts",
@@ -218,7 +218,7 @@ func TestServeHTTP(t *testing.T) {
 			statusCode: 200,
 			params:     make(map[string]string),
 		},
-		{ // hostname, scheme, path registered with middleware with params
+		{ // hostname, scheme, path registered with interceptor with params
 			handler:    fakeHandler{"ok"},
 			path:       "/posts/:id",
 			reqURL:     "https://example.com/posts/1",
@@ -267,25 +267,25 @@ func TestServeHTTP(t *testing.T) {
 	for _, test := range tests {
 		req := httptest.NewRequest("GET", test.reqURL, nil)
 		rw := httptest.NewRecorder()
-		mockMiddlewareFirst := &fakeMiddleware{"first"}
-		mockMiddlewareSecond := &fakeMiddleware{"second"}
+		mockInterceptorFirst := &fakeInterceptor{"first"}
+		mockInterceptorSecond := &fakeInterceptor{"second"}
 
 		r, _ := New(
 			WithSchemes(test.schemes...),
 			WithHostnames(test.hostnames...),
-			WithMiddlewares(mockMiddlewareFirst, mockMiddlewareSecond),
+			WithInterceptors(mockInterceptorFirst, mockInterceptorSecond),
 		)
 
-		r.Get(test.path, test.handler)
+		_ = r.Get(test.path, test.handler)
 
 		r.ServeHTTP(rw, req)
 
-		t.Run("applies middlewares in correct order", func(t *testing.T) {
-			if mockMiddlewareFirst.name != "called" {
-				t.Fatalf("middleware must be executed on the serve")
+		t.Run("applies interceptors in correct order", func(t *testing.T) {
+			if mockInterceptorFirst.name != "called" {
+				t.Fatalf("interceptor must be executed on the serve")
 			}
-			if mockMiddlewareSecond.name != "called" {
-				t.Fatalf("middleware must be executed on the serve")
+			if mockInterceptorSecond.name != "called" {
+				t.Fatalf("interceptor must be executed on the serve")
 			}
 		})
 
@@ -330,15 +330,15 @@ func TestMethodRegistrations(t *testing.T) {
 		{http.MethodTrace, tracePath, traceHandler},
 	}
 
-	r.Get(getPath, getHandler)
-	r.Head(headPath, headHandler)
-	r.Post(postPath, postHandler)
-	r.Put(putPath, putHandler)
-	r.Patch(patchPath, patchHandler)
-	r.Delete(deletePath, deleteHandler)
-	r.Connect(connectPath, connectHandler)
-	r.Options(optionsPath, optionsHandler)
-	r.Trace(tracePath, traceHandler)
+	_ = r.Get(getPath, getHandler)
+	_ = r.Head(headPath, headHandler)
+	_ = r.Post(postPath, postHandler)
+	_ = r.Put(putPath, putHandler)
+	_ = r.Patch(patchPath, patchHandler)
+	_ = r.Delete(deletePath, deleteHandler)
+	_ = r.Connect(connectPath, connectHandler)
+	_ = r.Options(optionsPath, optionsHandler)
+	_ = r.Trace(tracePath, traceHandler)
 
 	for _, test := range tests {
 		t.Run("register handler for correct http method & path", func(t *testing.T) {
@@ -363,11 +363,11 @@ func TestMethodRegistrations(t *testing.T) {
 	})
 }
 
-type fakeMiddleware struct {
+type fakeInterceptor struct {
 	name string
 }
 
-func (m *fakeMiddleware) Next(h http.Handler) http.Handler {
+func (m *fakeInterceptor) Middleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		m.name = "called"
 		h.ServeHTTP(rw, req)
@@ -379,5 +379,5 @@ type fakeHandler struct {
 }
 
 func (h fakeHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	rw.Write([]byte(h.bodyText))
+	_, _ = rw.Write([]byte(h.bodyText))
 }

@@ -1,4 +1,4 @@
-package middleware
+package interceptor
 
 import (
 	"io/ioutil"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestNext(t *testing.T) {
+func TestMiddleware(t *testing.T) {
 	mfn := Func(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			rw.Header().Set("X-Middleware", "compass")
@@ -16,20 +16,20 @@ func TestNext(t *testing.T) {
 	})
 
 	hfn := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.Write([]byte("pong"))
+		_, _ = rw.Write([]byte("pong"))
 	})
 
 	rw := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "http://example.com/ping", nil)
-	mfn.Next(hfn).(http.Handler).ServeHTTP(rw, req)
+	mfn.Middleware(hfn).(http.Handler).ServeHTTP(rw, req)
 
 	resp := rw.Result()
-	t.Run("verify middleware effect with http header", func(t *testing.T) {
+	t.Run("verify interceptor effect with http header", func(t *testing.T) {
 		if resp.Header.Get("X-Middleware") != "compass" {
-			t.Fatalf("middleware Next() should call Next() with effects")
+			t.Fatalf("interceptor Middleware() should call Middleware() with effects")
 		}
 		if body, err := ioutil.ReadAll(resp.Body); string(body) != "pong" || err != nil {
-			t.Fatalf("middleware Next() should call Next() with effects %+v", err)
+			t.Fatalf("interceptor Middleware() should call Middleware() with effects %+v", err)
 		}
 	})
 }

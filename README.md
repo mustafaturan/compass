@@ -1,10 +1,10 @@
 # 🧭 Compass
 
 [![GoDoc](https://godoc.org/github.com/mustafaturan/compass?status.svg)](https://godoc.org/github.com/mustafaturan/compass)
-[![Build Status](https://travis-ci.com/mustafaturan/compass.svg?branch=master)](https://travis-ci.com/mustafaturan/compass)
-[![Coverage Status](https://coveralls.io/repos/github/mustafaturan/compass/badge.svg?branch=master)](https://coveralls.io/github/mustafaturan/compass?branch=master)
+[![Build Status](https://travis-ci.com/mustafaturan/compass.svg?branch=main)](https://travis-ci.com/mustafaturan/compass)
+[![Coverage Status](https://coveralls.io/repos/github/mustafaturan/compass/badge.svg?branch=main)](https://coveralls.io/github/mustafaturan/compass?branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mustafaturan/compass)](https://goreportcard.com/report/github.com/mustafaturan/compass)
-[![GitHub license](https://img.shields.io/github/license/mustafaturan/compass.svg)](https://github.com/mustafaturan/compass/blob/master/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/mustafaturan/compass.svg)](https://github.com/mustafaturan/compass/blob/main/LICENSE)
 
 Compass is a HTTP server router with middleware support.
 

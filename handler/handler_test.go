@@ -14,6 +14,11 @@ func TestNew(t *testing.T) {
 		errMessage string
 	}{
 		{
+			path:     "/",
+			segments: []string{""},
+			params:   make(map[string]int),
+		},
+		{
 			path:     "/posts",
 			segments: []string{"posts"},
 			params:   make(map[string]int),

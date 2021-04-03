@@ -36,6 +36,9 @@ func New(path string, h http.Handler) (*Handler, error) {
 	if h == nil {
 		return nil, errors.New("handler can't be nil")
 	}
+	if len(path) == 1 {
+		segments = []string{""}
+	}
 
 	for i := 1; i < len(path); i++ {
 		start := i

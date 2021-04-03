@@ -191,6 +191,15 @@ func TestServeHTTP(t *testing.T) {
 		statusCode int
 		params     map[string]string
 	}{
+		{
+			handler:    fakeHandler{"ok"},
+			path:       "/",
+			reqURL:     "https://example.com/",
+			schemes:    []string{"https", "http"},
+			hostnames:  []string{"example.com"},
+			statusCode: 200,
+			params:     make(map[string]string),
+		},
 		{ // hostname, scheme, path registered
 			handler:    fakeHandler{"ok"},
 			path:       "/posts",
